@@ -34,7 +34,7 @@ architecture archi of top_level is
     signal Reset : std_logic;
     signal RegAff : std_logic_vector(31 downto 0);
     signal clk_div : std_logic;
-    signal counter : unsigned(22 downto 0) := (others => '0');  -- ~6Hz pour voir l'exécution
+    signal counter : unsigned(21 downto 0) := (others => '0');  -- Fréquence confortable
     
 begin
     -- Gestion du reset (bouton KEY(0) inversé car les boutons sont actifs bas)
@@ -86,7 +86,18 @@ begin
     LEDR(9) <= Reset;                              -- État du reset
     LEDR(8) <= clk_div;                           -- Horloge du processeur
     LEDR(7) <= '1' when RegAff /= x"00000000" else '0';  -- RegAff actif
-    LEDR(6 downto 3) <= RegAff(7 downto 4);      -- Quartet haut de RegAff
-    LEDR(2 downto 0) <= RegAff(31 downto 29);    -- Bits de poids fort pour debug
+    
+    -- LEDs de diagnostic BLT
+    LEDR(6) <= '1' when RegAff = x"00000001" else '0';   -- "1" affiché
+    LEDR(5) <= '1' when RegAff = x"00000005" else '0';   -- "5" affiché (ERREUR si BLT marche)
+    LEDR(4) <= '1' when RegAff = x"0000000A" else '0';   -- "A" affiché (SUCCÈS si BLT marche)
+    
+    LEDR(3 downto 0) <= RegAff(3 downto 0);              -- Valeur hexadécimale directe
+    
+    -- ⭐ RÉSULTAT FINAL ATTENDU AVEC LE FIX NOP :
+    -- HEX: 0001 → 000A → 0001 → 000A... (le 5 ne doit jamais apparaître)
+    -- LEDR(6): Clignote (détection "1")
+    -- LEDR(4): Clignote (détection "A") 
+    -- LEDR(5): JAMAIS allumé (pas de "5" = BLT fonctionne)
     
 end architecture archi;

@@ -16,11 +16,12 @@ begin
     process(PC, SignExtImm, nPCsel)
     begin
         if nPCsel = '0' then
-            -- PC = PC + 1
+            -- PC = PC + 1 (exécution séquentielle)
             Next_PC <= std_logic_vector(unsigned(PC) + 1);
         else
-            -- PC = PC + 1 + SignExt(offset)
-            Next_PC <= std_logic_vector(unsigned(PC) + 1 + unsigned(SignExtImm));
+            -- ⭐ CORRECTION CRITIQUE : PC = PC + 1 + SignExt(offset)
+            -- Conversion correcte : tout en signed pour gérer les offsets négatifs
+            Next_PC <= std_logic_vector(signed(PC) + 1 + signed(SignExtImm));
         end if;
     end process;
 end architecture behavioral;
