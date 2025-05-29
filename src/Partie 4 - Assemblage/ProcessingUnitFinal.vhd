@@ -12,7 +12,7 @@ entity ProcessingUnitFinal is
         ALUCtr : in std_logic_vector(1 downto 0);
         MemWr : in std_logic;
         MemToReg : in std_logic;
-        RegSel : in std_logic;  -- Nouveau signal pour le multiplexeur RB
+        RegSel : in std_logic;  -- Signal pour le multiplexeur RB
         -- Adresses des registres
         RA : in std_logic_vector(3 downto 0);
         RB : in std_logic_vector(3 downto 0);
@@ -21,12 +21,14 @@ entity ProcessingUnitFinal is
         Immediat : in std_logic_vector(7 downto 0);
         -- Sorties des drapeaux
         N : out std_logic;
-        Z : out std_logic
+        Z : out std_logic;
+        -- NOUVEAU : Sortie BusB pour ControlUnit
+        BusB_out : out std_logic_vector(31 downto 0)
     );
 end entity ProcessingUnitFinal;
 
 architecture structural of ProcessingUnitFinal is
-    -- Déclaration des composants
+    -- Déclaration des composants (inchangés)
     component ALU is
         port (
             OP : in std_logic_vector(1 downto 0);
@@ -90,7 +92,7 @@ architecture structural of ProcessingUnitFinal is
     signal BusW : std_logic_vector(31 downto 0);
     signal ImmExtended : std_logic_vector(31 downto 0);
     signal ALUin : std_logic_vector(31 downto 0);
-    signal RB_addr : std_logic_vector(3 downto 0);  -- Nouveau signal pour le multiplexeur RegSel
+    signal RB_addr : std_logic_vector(3 downto 0);
     
 begin
     -- Instanciation du banc de registres
@@ -105,6 +107,9 @@ begin
         A => BusA,
         B => BusB
     );
+    
+    -- NOUVEAU : Exposer BusB vers l'extérieur
+    BusB_out <= BusB;
     
     -- Multiplexeur pour RegSel (sélection de l'adresse RB)
     Mux_RegSel: Mux2v1 

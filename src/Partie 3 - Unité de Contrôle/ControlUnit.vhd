@@ -9,11 +9,12 @@ entity ControlUnit is
         
         -- Entrées
         Instruction : in std_logic_vector(31 downto 0);
-        N_ALU : in std_logic;  -- Drapeau N de l'ALU
-        Z_ALU : in std_logic;  -- Drapeau Z de l'ALU
+        N_ALU : in std_logic;
+        Z_ALU : in std_logic;
+        BusB : in std_logic_vector(31 downto 0);
         
         -- Sorties vers le registre PSR
-        N : out std_logic;  -- Drapeau N mémorisé
+        N : out std_logic;
         
         -- Signaux de contrôle pour l'unité de gestion des instructions
         nPC_SEL : out std_logic;
@@ -80,6 +81,7 @@ architecture structural of ControlUnit is
     signal PSR_IN : std_logic_vector(31 downto 0);
     signal PSREn : std_logic;
     signal RegAff_control : std_logic;
+    signal RegAff_stored : std_logic_vector(31 downto 0);
     
 begin
     -- Instanciation du registre PSR
@@ -92,10 +94,9 @@ begin
     );
     
     -- Construction du PSR_IN
-    -- Les bits 31 et 30 sont respectivement les drapeaux N et Z
     PSR_IN(31) <= N_ALU;
     PSR_IN(30) <= Z_ALU;
-    PSR_IN(29 downto 0) <= (others => '0');  -- Les autres bits sont à 0
+    PSR_IN(29 downto 0) <= (others => '0');
     
     -- Sortie du drapeau N
     N <= PSR_OUT(31);
@@ -119,14 +120,21 @@ begin
         RegAff => RegAff_control
     );
     
-    -- Gestion du registre RegAff
-    process(RegAff_control, PSR_OUT)
+    --  SOLUTION FINALE : Toujours mettre à jour RegAff avec la dernière valeur
+    process(CLK, Reset)
     begin
-        if RegAff_control = '1' then
-            RegAff <= PSR_OUT;  -- Afficher la valeur du PSR sur les LEDs
-        else
-            RegAff <= (others => '0');
+        if Reset = '1' then
+            RegAff_stored <= (others => '0');
+        elsif rising_edge(CLK) then
+            if RegAff_control = '1' then
+                --  CORRECTION : Toujours capturer la dernière valeur de R2
+                -- Cela affichera la vraie somme finale (0x37) quand STR s'exécute
+                RegAff_stored <= BusB;
+            end if;
         end if;
     end process;
+    
+    -- Sortie RegAff
+    RegAff <= RegAff_stored;
     
 end architecture structural;

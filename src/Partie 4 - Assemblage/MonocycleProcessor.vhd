@@ -38,7 +38,9 @@ architecture structural of MonocycleProcessor is
             RW : in std_logic_vector(3 downto 0);
             Immediat : in std_logic_vector(7 downto 0);
             N : out std_logic;
-            Z : out std_logic
+            Z : out std_logic;
+            -- ⭐ NOUVEAU : Sortie BusB
+            BusB_out : out std_logic_vector(31 downto 0)
         );
     end component;
     
@@ -49,6 +51,8 @@ architecture structural of MonocycleProcessor is
             Instruction : in std_logic_vector(31 downto 0);
             N_ALU : in std_logic;
             Z_ALU : in std_logic;
+            -- NOUVEAU : Entrée BusB
+            BusB : in std_logic_vector(31 downto 0);
             N : out std_logic;
             nPC_SEL : out std_logic;
             RegWr : out std_logic;
@@ -80,6 +84,8 @@ architecture structural of MonocycleProcessor is
     signal N_PSR : std_logic;
     signal offset : std_logic_vector(23 downto 0);
     signal Immediat : std_logic_vector(7 downto 0);
+    -- NOUVEAU : Signal pour BusB
+    signal BusB_data : std_logic_vector(31 downto 0);
     
 begin
     -- Extraction de l'offset depuis l'instruction (pour les branchements)
@@ -112,7 +118,9 @@ begin
         RW => Rd,
         Immediat => Immediat,
         N => N_ALU,
-        Z => Z_ALU
+        Z => Z_ALU,
+        -- NOUVEAU : Récupérer BusB
+        BusB_out => BusB_data
     );
     
     -- Instanciation de l'unité de contrôle
@@ -122,6 +130,8 @@ begin
         Instruction => Instruction,
         N_ALU => N_ALU,
         Z_ALU => Z_ALU,
+        -- NOUVEAU : Envoyer BusB à ControlUnit
+        BusB => BusB_data,
         N => N_PSR,
         nPC_SEL => nPC_SEL,
         RegWr => RegWr,
