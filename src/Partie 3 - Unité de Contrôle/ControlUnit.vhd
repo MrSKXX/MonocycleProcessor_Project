@@ -1,7 +1,6 @@
 library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
-
 entity ControlUnit is
     port (
         CLK : in std_logic;
@@ -25,7 +24,6 @@ entity ControlUnit is
         RegAff : out std_logic_vector(31 downto 0)
     );
 end entity ControlUnit;
-
 architecture structural of ControlUnit is
     component PSR_Register is
         port (
@@ -36,7 +34,7 @@ architecture structural of ControlUnit is
             DATAOUT : out std_logic_vector(31 downto 0)
         );
     end component;
-    
+
     component Decoder is
         port (
             instruction : in std_logic_vector(31 downto 0);
@@ -56,13 +54,13 @@ architecture structural of ControlUnit is
             RegAff : out std_logic
         );
     end component;
-    
+
     signal PSR_OUT : std_logic_vector(31 downto 0);
     signal PSR_IN : std_logic_vector(31 downto 0);
     signal PSREn : std_logic;
     signal RegAff_control : std_logic;
     signal RegAff_stored : std_logic_vector(31 downto 0);
-    
+
 begin
     PSR_Reg: PSR_Register port map (
         CLK => CLK,
@@ -71,13 +69,13 @@ begin
         DATAIN => PSR_IN,
         DATAOUT => PSR_OUT
     );
-    
+
     PSR_IN(31) <= N_ALU;
     PSR_IN(30) <= Z_ALU;
     PSR_IN(29 downto 0) <= (others => '0');
-    
+
     N <= PSR_OUT(31);
-    
+
     Instruction_Decoder: Decoder port map (
         instruction => Instruction,
         N => PSR_OUT(31),
@@ -95,8 +93,8 @@ begin
         MemToReg => MemToReg,
         RegAff => RegAff_control
     );
-    
-    --  AFFICHAGE NORMAL
+
+    -- ⭐ AFFICHAGE NORMAL
     process(CLK, Reset)
     begin
         if Reset = '1' then
@@ -107,7 +105,7 @@ begin
             end if;
         end if;
     end process;
-    
+
     RegAff <= RegAff_stored;
-    
+
 end architecture structural;

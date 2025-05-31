@@ -13,15 +13,19 @@ entity PSR_Register is
 end entity PSR_Register;
 
 architecture behavioral of PSR_Register is
+    signal reg_data : std_logic_vector(31 downto 0);
 begin
     process(CLK, Reset)
     begin
         if Reset = '1' then
-            DATAOUT <= (others => '0');
+            reg_data <= (others => '0');  -- Reset du signal interne
         elsif rising_edge(CLK) then
             if WE = '1' then
-                DATAOUT <= DATAIN;
+                reg_data <= DATAIN;
             end if;
         end if;
     end process;
+    
+    DATAOUT <= reg_data;
+    
 end architecture behavioral;

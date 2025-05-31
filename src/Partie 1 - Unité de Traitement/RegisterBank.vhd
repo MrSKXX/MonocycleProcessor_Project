@@ -32,18 +32,18 @@ architecture behavioral of RegisterBank is
 begin
     A <= Banc(to_integer(unsigned(RA)));
     B <= Banc(to_integer(unsigned(RB)));
-        write_process: process(CLK, Reset)
-    begin
-        if Reset = '1' then
-            for i in 14 downto 0 loop
-                Banc(i) <= (others => '0');
-            end loop;
-            Banc(15) <= X"00000030";
-        elsif rising_edge(CLK) then
-            if WE = '1' then
-                Banc(to_integer(unsigned(RW))) <= W;
-            end if;
+   write_process: process(CLK, Reset)
+begin
+    if Reset = '1' then
+        for i in 14 downto 0 loop
+            Banc(i) <= (others => '0');
+        end loop;
+        Banc(15) <= X"00000030";  -- R15 toujours à 0x30
+    elsif rising_edge(CLK) then
+        if WE = '1' and to_integer(unsigned(RW)) /= 15 then  -- Ne pas écrire dans R15
+            Banc(to_integer(unsigned(RW))) <= W;
         end if;
-    end process;
+    end if;
+end process;
     
 end architecture behavioral;

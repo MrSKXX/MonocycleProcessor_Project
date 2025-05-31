@@ -39,19 +39,18 @@ architecture structural of MonocycleProcessor is
             Immediat : in std_logic_vector(7 downto 0);
             N : out std_logic;
             Z : out std_logic;
-            -- ⭐ NOUVEAU : Sortie BusB
             BusB_out : out std_logic_vector(31 downto 0)
         );
     end component;
     
+    --  DÉCLARATION CORRIGÉE : ControlUnit SANS N_ALU
     component ControlUnit is
         port (
             CLK : in std_logic;
             Reset : in std_logic;
             Instruction : in std_logic_vector(31 downto 0);
-            N_ALU : in std_logic;
+            --  PAS DE N_ALU ici (votre Decoder ne l'a pas)
             Z_ALU : in std_logic;
-            -- NOUVEAU : Entrée BusB
             BusB : in std_logic_vector(31 downto 0);
             N : out std_logic;
             nPC_SEL : out std_logic;
@@ -84,7 +83,6 @@ architecture structural of MonocycleProcessor is
     signal N_PSR : std_logic;
     signal offset : std_logic_vector(23 downto 0);
     signal Immediat : std_logic_vector(7 downto 0);
-    -- NOUVEAU : Signal pour BusB
     signal BusB_data : std_logic_vector(31 downto 0);
     
 begin
@@ -119,18 +117,16 @@ begin
         Immediat => Immediat,
         N => N_ALU,
         Z => Z_ALU,
-        -- NOUVEAU : Récupérer BusB
         BusB_out => BusB_data
     );
     
-    -- Instanciation de l'unité de contrôle
+    --  INSTANCIATION CORRIGÉE : ControlUnit SANS N_ALU
     Control_Unit: ControlUnit port map (
         CLK => CLK,
         Reset => Reset,
         Instruction => Instruction,
-        N_ALU => N_ALU,
+        --  PAS de connexion N_ALU => N_ALU
         Z_ALU => Z_ALU,
-        -- NOUVEAU : Envoyer BusB à ControlUnit
         BusB => BusB_data,
         N => N_PSR,
         nPC_SEL => nPC_SEL,

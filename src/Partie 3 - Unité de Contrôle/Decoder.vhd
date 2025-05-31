@@ -6,7 +6,7 @@ entity Decoder is
     port (
         instruction : in std_logic_vector(31 downto 0);
         N : in std_logic;
-        N_ALU : in std_logic;
+        N_ALU : in std_logic; 
         nPC_SEL : out std_logic;
         PSREn : out std_logic;
         RegWr : out std_logic;
@@ -27,7 +27,6 @@ architecture behavioral of Decoder is
     type enum_instruction is (MOV, ADDi, ADDr, CMP, LDR, STR, BAL, BLT);
     signal instr_courante: enum_instruction;
 begin
-    -- Process de décodage
     process(instruction)
     begin
         instr_courante <= MOV;
@@ -68,7 +67,7 @@ begin
         end case;
     end process;
     
-    -- Process de génération des signaux
+    -- GÉNÉRATION DES SIGNAUX (version corrigée)
     process(instr_courante, N, N_ALU, instruction)
     begin
         -- Valeurs par défaut
@@ -136,8 +135,8 @@ begin
                 nPC_SEL <= '1';
                 
             when BLT =>
-                -- ⭐ VERSION FINALE : Utiliser N_ALU directement
-                if N_ALU = '1' then
+                -- Utilise le drapeau N du PSR
+                if N = '1' then
                     nPC_SEL <= '1';
                 else
                     nPC_SEL <= '0';
