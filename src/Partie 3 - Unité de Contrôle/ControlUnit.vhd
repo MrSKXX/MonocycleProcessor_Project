@@ -1,12 +1,13 @@
 library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
+
 entity ControlUnit is
     port (
         CLK : in std_logic;
         Reset : in std_logic;
         Instruction : in std_logic_vector(31 downto 0);
-        N_ALU : in std_logic;
+        N_ALU : in std_logic;  -- PORT AJOUTÉ
         Z_ALU : in std_logic;
         BusB : in std_logic_vector(31 downto 0);
         N : out std_logic;
@@ -24,6 +25,7 @@ entity ControlUnit is
         RegAff : out std_logic_vector(31 downto 0)
     );
 end entity ControlUnit;
+
 architecture structural of ControlUnit is
     component PSR_Register is
         port (
@@ -39,6 +41,7 @@ architecture structural of ControlUnit is
         port (
             instruction : in std_logic_vector(31 downto 0);
             N : in std_logic;
+            N_ALU : in std_logic;
             nPC_SEL : out std_logic;
             PSREn : out std_logic;
             RegWr : out std_logic;
@@ -79,6 +82,7 @@ begin
     Instruction_Decoder: Decoder port map (
         instruction => Instruction,
         N => PSR_OUT(31),
+        N_ALU => N_ALU,  -- PORT CONNECTÉ
         nPC_SEL => nPC_SEL,
         PSREn => PSREn,
         RegWr => RegWr,
@@ -94,7 +98,7 @@ begin
         RegAff => RegAff_control
     );
 
-    -- ⭐ AFFICHAGE NORMAL
+    -- Gestion de l'affichage
     process(CLK, Reset)
     begin
         if Reset = '1' then

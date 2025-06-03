@@ -67,10 +67,8 @@ begin
         end case;
     end process;
     
-    -- GÉNÉRATION DES SIGNAUX (version corrigée)
     process(instr_courante, N, N_ALU, instruction)
     begin
-        -- Valeurs par défaut
         nPC_SEL <= '0';
         PSREn <= '0';
         RegWr <= '0';
@@ -135,7 +133,6 @@ begin
                 nPC_SEL <= '1';
                 
             when BLT =>
-                -- Utilise le drapeau N du PSR
                 if N = '1' then
                     nPC_SEL <= '1';
                 else

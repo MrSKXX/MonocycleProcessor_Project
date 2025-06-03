@@ -18,7 +18,7 @@ begin
     process(CLK, Reset)
     begin
         if Reset = '1' then
-            reg_data <= (others => '0');  -- Reset du signal interne
+            reg_data <= (others => '0');  
         elsif rising_edge(CLK) then
             if WE = '1' then
                 reg_data <= DATAIN;
