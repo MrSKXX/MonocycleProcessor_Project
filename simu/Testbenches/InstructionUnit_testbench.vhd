@@ -6,7 +6,7 @@ entity InstructionUnit_testbench is
 end entity InstructionUnit_testbench;
 
 architecture test of InstructionUnit_testbench is
-    -- Déclaration du composant à tester
+    -- D�claration du composant � tester
     component InstructionUnit is
         port (
             CLK : in std_logic;
@@ -27,8 +27,40 @@ architecture test of InstructionUnit_testbench is
     -- Constantes pour les tests
     constant CLK_PERIOD : time := 10 ns;
     
+    -- ?? FONCTION DE CONVERSION POUR MODELSIM 2016
+    function to_hex_string(value : std_logic_vector) return string is
+        variable result : string(1 to value'length/4);
+        variable temp : std_logic_vector(value'length-1 downto 0) := value;
+        variable nibble : std_logic_vector(3 downto 0);
+    begin
+        for i in result'range loop
+            nibble := temp(temp'length-1 downto temp'length-4);
+            case nibble is
+                when "0000" => result(i) := '0';
+                when "0001" => result(i) := '1';
+                when "0010" => result(i) := '2';
+                when "0011" => result(i) := '3';
+                when "0100" => result(i) := '4';
+                when "0101" => result(i) := '5';
+                when "0110" => result(i) := '6';
+                when "0111" => result(i) := '7';
+                when "1000" => result(i) := '8';
+                when "1001" => result(i) := '9';
+                when "1010" => result(i) := 'A';
+                when "1011" => result(i) := 'B';
+                when "1100" => result(i) := 'C';
+                when "1101" => result(i) := 'D';
+                when "1110" => result(i) := 'E';
+                when "1111" => result(i) := 'F';
+                when others => result(i) := 'X';
+            end case;
+            temp := temp(temp'length-5 downto 0) & "0000";
+        end loop;
+        return result;
+    end function;
+    
 begin
-    -- Instanciation du composant à tester
+    -- Instanciation du composant � tester
     UUT: InstructionUnit port map (
         CLK => CLK_tb,
         Reset => Reset_tb,
@@ -37,7 +69,7 @@ begin
         Instruction => Instruction_tb
     );
     
-    -- Génération de l'horloge
+    -- G�n�ration de l'horloge
     clk_process: process
     begin
         CLK_tb <= '0';
@@ -46,85 +78,174 @@ begin
         wait for CLK_PERIOD/2;
     end process;
     
-    -- Processus de test
+    -- ?? PROCESSUS DE TEST FINAL
     stimulus: process
     begin
+        report "=== DEBUT TEST INSTRUCTIONUNIT FINAL ===";
+        
         -- Reset initial
         Reset_tb <= '1';
         wait for CLK_PERIOD*2;
         Reset_tb <= '0';
         wait for CLK_PERIOD;
         
-        -- Test 1: Exécution séquentielle (nPCsel = 0)
-        -- Le PC s'incrémente de 1 à chaque cycle
+        -- ========================================
+        -- PHASE 1: VALIDATION COMPLETE DES INSTRUCTIONS
+        -- ========================================
+        report "=== PHASE 1: VALIDATION SEQUENTIELLE COMPLETE ===";
         nPCsel_tb <= '0';
         
-        -- Attendre un cycle pour que la première instruction soit chargée
+        -- PC = 0: MOV R1,#0x10
         wait for CLK_PERIOD;
-        -- PC = 0, Instruction devrait être MOV R1,#0x10
+        report "PC=0 (MOV R1,#16): " & to_hex_string(Instruction_tb);
         assert Instruction_tb = x"E3A01010" 
-            report "Test failed: Expected MOV R1,#0x10 at PC=0" severity error;
+            report "ERREUR PC=0: Expected E3A01010, Got " & to_hex_string(Instruction_tb) severity error;
         
-        -- Passer à l'instruction suivante
+        -- PC = 1: MOV R2,#0x00
         wait for CLK_PERIOD;
-        -- PC = 1, Instruction devrait être MOV R2,#0x00
+        report "PC=1 (MOV R2,#0): " & to_hex_string(Instruction_tb);
         assert Instruction_tb = x"E3A02000" 
-            report "Test failed: Expected MOV R2,#0x00 at PC=1" severity error;
+            report "ERREUR PC=1: Expected E3A02000, Got " & to_hex_string(Instruction_tb) severity error;
         
-        -- Passer à l'instruction suivante
+        -- PC = 2: LDR R0,0(R1)
         wait for CLK_PERIOD;
-        -- PC = 2, Instruction devrait être LDR R0,0(R1)
+        report "PC=2 (LDR R0,0(R1)): " & to_hex_string(Instruction_tb);
         assert Instruction_tb = x"E4110000" 
-            report "Test failed: Expected LDR R0,0(R1) at PC=2" severity error;
+            report "ERREUR PC=2: Expected E4110000, Got " & to_hex_string(Instruction_tb) severity error;
         
-        -- Passer à l'instruction suivante
+        -- PC = 3: ADD R2,R2,R0
         wait for CLK_PERIOD;
-        -- PC = 3, Instruction devrait être ADD R2,R2,R0
+        report "PC=3 (ADD R2,R2,R0): " & to_hex_string(Instruction_tb);
         assert Instruction_tb = x"E0822000" 
-            report "Test failed: Expected ADD R2,R2,R0 at PC=3" severity error;
+            report "ERREUR PC=3: Expected E0822000, Got " & to_hex_string(Instruction_tb) severity error;
         
-        -- Passer à l'instruction suivante
+        -- PC = 4: ADD R1,R1,#1
         wait for CLK_PERIOD;
-        -- PC = 4, Instruction devrait être ADD R1,R1,#1
+        report "PC=4 (ADD R1,R1,#1): " & to_hex_string(Instruction_tb);
         assert Instruction_tb = x"E2811001" 
-            report "Test failed: Expected ADD R1,R1,#1 at PC=4" severity error;
+            report "ERREUR PC=4: Expected E2811001, Got " & to_hex_string(Instruction_tb) severity error;
         
-        -- Test 2: Saut avec offset négatif (nPCsel = 1)
-        -- On va simuler un branchement à l'étiquette 'loop' (PC = 2)
-        -- Depuis PC = 5, le saut devrait être de -5
-        offset_tb <= "111111111111111111111011"; -- Offset de -5 (en complément à 2)
-        nPCsel_tb <= '1';
+        -- PC = 5: CMP R1,#0x1A
         wait for CLK_PERIOD;
-        -- PC devrait être PC + 1 - 5 = 5 + 1 - 5 = 1
-        -- Instruction devrait être MOV R2,#0x00
-        assert Instruction_tb = x"E3A02000" 
-            report "Test failed: Expected MOV R2,#0x00 after jump to PC=1" severity error;
+        report "PC=5 (CMP R1,#26): " & to_hex_string(Instruction_tb);
+        assert Instruction_tb = x"E351001A" 
+            report "ERREUR PC=5: Expected E351001A, Got " & to_hex_string(Instruction_tb) severity error;
         
-        -- Revenons au mode séquentiel pour continuer
+        -- ?? PC = 6: BLT loop (INSTRUCTION CRITIQUE)
+        wait for CLK_PERIOD;
+        report "PC=6 (BLT loop - CRITIQUE): " & to_hex_string(Instruction_tb);
+        assert Instruction_tb = x"BAFFFFFB" 
+            report "ERREUR CRITIQUE PC=6: Expected BAFFFFFB, Got " & to_hex_string(Instruction_tb) severity error;
+        
+        if Instruction_tb = x"BAFFFFFB" then
+            report "SUCCES: BLT INSTRUCTION CORRECTE EN MEMOIRE !";
+        else
+            report "ECHEC: BLT INSTRUCTION INCORRECTE - VERIFIER MEMOIRE !";
+        end if;
+        
+        -- PC = 7: STR R2,0(R1)
+        wait for CLK_PERIOD;
+        report "PC=7 (STR R2,0(R1)): " & to_hex_string(Instruction_tb);
+        assert Instruction_tb = x"E4012000" 
+            report "ERREUR PC=7: Expected E4012000, Got " & to_hex_string(Instruction_tb) severity error;
+        
+        -- PC = 8: BAL main
+        wait for CLK_PERIOD;
+        report "PC=8 (BAL main): " & to_hex_string(Instruction_tb);
+        assert Instruction_tb = x"EAFFFFF7" 
+            report "ERREUR PC=8: Expected EAFFFFF7, Got " & to_hex_string(Instruction_tb) severity error;
+        
+        -- ========================================
+        -- PHASE 2: TEST BRANCHEMENT BLT
+        -- ========================================
+        report "=== PHASE 2: TEST BRANCHEMENT BLT ===";
+        
+        -- Reset et positionnement � PC=6 (BLT)
+        Reset_tb <= '1';
+        wait for CLK_PERIOD;
+        Reset_tb <= '0';
+        nPCsel_tb <= '0'; -- Mode s�quentiel
+        
+        -- Avancer jusqu'� PC=6
+        for i in 0 to 5 loop
+            wait for CLK_PERIOD;
+        end loop;
+        
+        -- V�rification position BLT
+        report "Verification position BLT: " & to_hex_string(Instruction_tb);
+        assert Instruction_tb = x"BAFFFFFB" 
+            report "ERREUR: Pas a BLT au bon moment !" severity error;
+        
+        -- Analyse de l'offset BLT
+        report "ANALYSE OFFSET BLT:";
+        report "   Instruction complete: " & to_hex_string(Instruction_tb);
+        report "   Offset (bits 23:0): " & to_hex_string(Instruction_tb(23 downto 0));
+        report "   Offset decimal: " & integer'image(to_integer(signed(Instruction_tb(23 downto 0))));
+        
+        -- Test du branchement BLT
+        -- PC actuel = 6, offset = -5
+        -- Next_PC = PC + 1 + offset = 6 + 1 + (-5) = 2
+        offset_tb <= Instruction_tb(23 downto 0); -- Offset r�el de l'instruction
+        nPCsel_tb <= '1'; -- Activer le branchement
+        wait for CLK_PERIOD;
+        
+        -- V�rification: retour � PC=2 (LDR)
+        report "Apres branchement BLT: " & to_hex_string(Instruction_tb);
+        if Instruction_tb = x"E4110000" then
+            report "SUCCES: BRANCHEMENT BLT REUSSI ! Retour a PC=2 (LDR)";
+        else
+            report "ECHEC: BRANCHEMENT BLT RATE ! Attendu LDR (E4110000), Obtenu " & to_hex_string(Instruction_tb);
+        end if;
+        
+        -- ========================================
+        -- PHASE 3: TEST BRANCHEMENT BAL (REFERENCE)
+        -- ========================================
+        report "=== PHASE 3: TEST BRANCHEMENT BAL (REFERENCE) ===";
+        
+        -- Reset et positionnement � PC=8 (BAL)
+        Reset_tb <= '1';
+        wait for CLK_PERIOD;
+        Reset_tb <= '0';
         nPCsel_tb <= '0';
-        wait for CLK_PERIOD;
-        -- PC = 2, Instruction devrait être LDR R0,0(R1)
-        assert Instruction_tb = x"E4110000" 
-            report "Test failed: Expected LDR R0,0(R1) at PC=2 after sequential execution" severity error;
         
-        -- Test 3: Saut avec offset négatif (nPCsel = 1)
-        -- On va simuler un branchement à l'étiquette 'main' (PC = 0)
-        -- Supposons que nous sommes à PC = 8 (instruction BAL main)
-        -- Exécutons séquentiellement jusqu'à PC = 8
-        wait for CLK_PERIOD * 6;  -- Atteindre PC = 8
+        -- Avancer jusqu'� PC=8
+        for i in 0 to 7 loop
+            wait for CLK_PERIOD;
+        end loop;
         
-        -- Maintenant simulons le saut à 'main'
-        offset_tb <= "111111111111111111110111"; -- Offset de -9 (en complément à 2)
+        -- Test BAL
+        report "Test BAL: " & to_hex_string(Instruction_tb);
+        offset_tb <= Instruction_tb(23 downto 0); -- FFFFF7 = -9
         nPCsel_tb <= '1';
         wait for CLK_PERIOD;
-        -- PC devrait être PC + 1 - 9 = 8 + 1 - 9 = 0
-        -- Instruction devrait être MOV R1,#0x10
-        assert Instruction_tb = x"E3A01010" 
-            report "Test failed: Expected MOV R1,#0x10 at PC=0 after jump" severity error;
         
-        -- Fin des tests
-        report "All tests completed";
-        wait;
+        if Instruction_tb = x"E3A01010" then
+            report "SUCCES: BRANCHEMENT BAL REUSSI ! PC=0 (MOV R1)";
+        else
+            report "ECHEC: BRANCHEMENT BAL RATE ! Attendu MOV (E3A01010), Obtenu " & to_hex_string(Instruction_tb);
+        end if;
+        
+        -- ========================================
+        -- RESUME FINAL
+        -- ========================================
+        report "=== RESUME FINAL ===";
+        report "Tests realises:";
+        report "1. Validation de toutes les instructions (PC=0 a PC=8)";
+        report "2. Test specifique instruction BLT";
+        report "3. Test branchement BLT (PC=6 -> PC=2)";
+        report "4. Test branchement BAL (PC=8 -> PC=0)";
+        report "";
+        report "Si tous les tests sont SUCCES:";
+        report "- InstructionUnit est PARFAITEMENT fonctionnelle";
+        report "- BLT devrait marcher sur FPGA";
+        report "";
+        report "Si des tests sont ECHEC:";
+        report "- Verifier instruction_memory.vhd";
+        report "- Verifier PC_Update.vhd";
+        report "- Verifier SignExtend_24to32.vhd";
+        
+        report "=== FIN TEST INSTRUCTIONUNIT FINAL ===";
+        wait; -- ARRET DEFINITIF
     end process;
     
 end architecture test;

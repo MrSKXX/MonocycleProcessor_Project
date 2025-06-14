@@ -6,17 +6,18 @@ entity InstructionUnit is
     port (
         CLK : in std_logic;
         Reset : in std_logic;
-        -- Entrée de contrôle
+        -- Entr�e de contr�le
         nPCsel : in std_logic;
-        -- Entrées des données
+        -- Entr�es des donn�es
         offset : in std_logic_vector(23 downto 0);
-        -- Sortie
-        Instruction : out std_logic_vector(31 downto 0)
+        -- Sorties
+        Instruction : out std_logic_vector(31 downto 0);
+        PC_out : out std_logic_vector(31 downto 0)  -- AJOUT pour debug
     );
 end entity InstructionUnit;
 
 architecture structural of InstructionUnit is
-    -- Déclaration des composants
+    -- D�claration des composants
     component instruction_memory is
         port (
             PC : in std_logic_vector(31 downto 0);
@@ -50,7 +51,7 @@ architecture structural of InstructionUnit is
     end component;
     
     -- Signaux internes
-    signal PC_out : std_logic_vector(31 downto 0);
+    signal PC_current : std_logic_vector(31 downto 0);
     signal Next_PC : std_logic_vector(31 downto 0);
     signal SignExtImm : std_logic_vector(31 downto 0);
     
@@ -60,7 +61,7 @@ begin
         CLK => CLK,
         Reset => Reset,
         PC_in => Next_PC,
-        PC_out => PC_out
+        PC_out => PC_current
     );
     
     -- Instanciation de l'extension de signe
@@ -69,18 +70,21 @@ begin
         S => SignExtImm
     );
     
-    -- Instanciation de l'unité de mise à jour du PC
+    -- Instanciation de l'unit� de mise � jour du PC
     PC_Updater: PC_Update port map (
-        PC => PC_out,
+        PC => PC_current,
         SignExtImm => SignExtImm,
         nPCsel => nPCsel,
         Next_PC => Next_PC
     );
     
-    -- Instanciation de la mémoire d'instructions
+    -- Instanciation de la m�moire d'instructions
     Inst_Mem: instruction_memory port map (
-        PC => PC_out,
+        PC => PC_current,
         Instruction => Instruction
     );
+    
+    -- Connexion de la sortie PC pour debug
+    PC_out <= PC_current;
     
 end architecture structural;

@@ -1,6 +1,6 @@
-# Script de simulation ModelSim pour l'unité de traitement complète
+# Script de simulation ModelSim pour l'unitï¿½ de traitement complï¿½te
 
-# Création de la bibliothèque de travail
+# Crï¿½ation de la bibliothï¿½que de travail
 vlib work
 
 # Compilation des fichiers VHDL
@@ -15,7 +15,7 @@ vcom -93 -work work ProcessingUnitComplete_testbench.vhd
 # Chargement du testbench
 vsim -t 1ns work.ProcessingUnitComplete_testbench
 
-# Ajout des signaux à observer dans la fenêtre de forme d'onde
+# Ajout des signaux ï¿½ observer dans la fenï¿½tre de forme d'onde
 add wave -position insertpoint \
 sim:/ProcessingUnitComplete_testbench/CLK_tb \
 sim:/ProcessingUnitComplete_testbench/Reset_tb \
@@ -48,7 +48,7 @@ sim:/ProcessingUnitComplete_testbench/UUT/Banc_Reg/Banc(6) \
 sim:/ProcessingUnitComplete_testbench/UUT/Banc_Reg/Banc(7) \
 sim:/ProcessingUnitComplete_testbench/UUT/Data_Mem/memory(0)
 
-# Exécution de la simulation pendant une durée suffisante
+# Exï¿½cution de la simulation pendant une durï¿½e suffisante
 run 200 ns
 
 # Zoom pour voir tous les signaux

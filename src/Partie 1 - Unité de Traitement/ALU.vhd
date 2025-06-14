@@ -15,7 +15,6 @@ end entity ALU;
 architecture behavioral of ALU is
     signal result : std_logic_vector(31 downto 0);
 begin
-    -- ⭐ CALCUL DU RÉSULTAT (inchangé)
     process(OP, A, B)
     begin
         case OP is
@@ -34,11 +33,10 @@ begin
     
     S <= result;
     
-    -- ⭐ CALCUL DES DRAPEAUX CORRIGÉ (syntaxe process correcte)
     process(OP, A, B, result)
     begin
         case OP is
-            when "10" =>  -- SUB/CMP : Drapeaux basés sur la COMPARAISON
+            when "10" =>  
                 if signed(A) < signed(B) then
                     N <= '1';
                 else

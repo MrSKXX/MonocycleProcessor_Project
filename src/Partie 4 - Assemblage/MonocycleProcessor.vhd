@@ -6,13 +6,12 @@ entity MonocycleProcessor is
     port (
         CLK : in std_logic;
         Reset : in std_logic;
-        -- Sortie pour l'affichage
         RegAff : out std_logic_vector(31 downto 0)
     );
 end entity MonocycleProcessor;
 
 architecture structural of MonocycleProcessor is
-    -- Déclaration des composants
+    -- Declaration des composants
     component InstructionUnit is
         port (
             CLK : in std_logic;
@@ -43,13 +42,12 @@ architecture structural of MonocycleProcessor is
         );
     end component;
     
-    --  DÉCLARATION CORRIGÉE : ControlUnit SANS N_ALU
     component ControlUnit is
         port (
             CLK : in std_logic;
             Reset : in std_logic;
             Instruction : in std_logic_vector(31 downto 0);
-            --  PAS DE N_ALU ici (votre Decoder ne l'a pas)
+            N_ALU : in std_logic;
             Z_ALU : in std_logic;
             BusB : in std_logic_vector(31 downto 0);
             N : out std_logic;
@@ -58,7 +56,7 @@ architecture structural of MonocycleProcessor is
             RegSel : out std_logic;
             Rn : out std_logic_vector(3 downto 0);
             Rm : out std_logic_vector(3 downto 0);
-            Rd : out std_logic_vector(3 downto 0);
+             Rd : out std_logic_vector(3 downto 0);
             ALUCtr : out std_logic_vector(1 downto 0);
             ALUSrc : out std_logic;
             MemWr : out std_logic;
@@ -89,10 +87,10 @@ begin
     -- Extraction de l'offset depuis l'instruction (pour les branchements)
     offset <= Instruction(23 downto 0);
     
-    -- Extraction de l'immédiat depuis l'instruction (pour les opérations avec immédiat)
+    -- Extraction de l'immediat depuis l'instruction (pour les operations avec immediat)
     Immediat <= Instruction(7 downto 0);
     
-    -- Instanciation de l'unité de gestion des instructions
+    -- Instanciation de l'unite de gestion des instructions
     Instruction_Unit: InstructionUnit port map (
         CLK => CLK,
         Reset => Reset,
@@ -101,7 +99,7 @@ begin
         Instruction => Instruction
     );
     
-    -- Instanciation de l'unité de traitement
+    -- Instanciation de l'unite de traitement
     Processing_Unit: ProcessingUnitFinal port map (
         CLK => CLK,
         Reset => Reset,
@@ -120,12 +118,12 @@ begin
         BusB_out => BusB_data
     );
     
-    --  INSTANCIATION CORRIGÉE : ControlUnit SANS N_ALU
+    -- Instanciation de l'unite de controle
     Control_Unit: ControlUnit port map (
         CLK => CLK,
         Reset => Reset,
         Instruction => Instruction,
-        --  PAS de connexion N_ALU => N_ALU
+        N_ALU => N_ALU,
         Z_ALU => Z_ALU,
         BusB => BusB_data,
         N => N_PSR,

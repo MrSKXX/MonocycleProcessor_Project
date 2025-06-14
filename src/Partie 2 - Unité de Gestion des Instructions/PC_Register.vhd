@@ -12,13 +12,19 @@ entity PC_Register is
 end entity PC_Register;
 
 architecture behavioral of PC_Register is
+    -- IMPORTANT: Utiliser un signal interne pour stocker la valeur du PC
+    signal PC_reg : std_logic_vector(31 downto 0);
 begin
     process(CLK, Reset)
     begin
         if Reset = '1' then
-            PC_out <= (others => '0');  
+            PC_reg <= (others => '0');  
         elsif rising_edge(CLK) then
-            PC_out <= PC_in;
+            PC_reg <= PC_in;
         end if;
     end process;
+    
+    -- Assigner le signal interne au port de sortie
+    PC_out <= PC_reg;
+    
 end architecture behavioral;

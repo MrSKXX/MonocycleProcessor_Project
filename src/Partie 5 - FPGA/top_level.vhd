@@ -33,14 +33,16 @@ architecture archi of top_level is
     
     signal Reset : std_logic;
     signal RegAff : std_logic_vector(31 downto 0);
+    signal RegAff_captured : std_logic_vector(31 downto 0) := (others => '0');
     signal clk_div : std_logic;
-    signal counter : unsigned(21 downto 0) := (others => '0');  -- Fréquence confortable
+    signal counter : unsigned(23 downto 0) := (others => '0'); -- Plus lent pour observer
     
 begin
-    -- Gestion du reset (bouton KEY(0) inversé car les boutons sont actifs bas)
+    -- Gestion du reset (bouton KEY(0) inverse car les boutons sont actifs bas)
     Reset <= not KEY(0);
     
-    -- Diviseur d'horloge pour avoir une fréquence observable
+    -- Diviseur d'horloge pour avoir une frequence observable
+    -- Divise par 2^24 = ~16M, donc 50MHz -> ~3Hz
     process(CLOCK_50, Reset)
     begin
         if Reset = '1' then
@@ -61,43 +63,61 @@ begin
         RegAff => RegAff
     );
     
-    -- Instanciation des décodeurs 7 segments
+    -- LATCH pour capturer la valeur maximale de RegAff
+    -- Necessaire car STR ne s'execute qu'une fois dans le programme
+    capture_process: process(clk_div, Reset)
+    begin
+        if Reset = '1' then
+            RegAff_captured <= (others => '0');
+        elsif rising_edge(clk_div) then
+            -- Capture toute valeur non-nulle (garde la plus recente)
+            if RegAff /= x"00000000" then
+                RegAff_captured <= RegAff;
+            end if;
+        end if;
+    end process;
+    
+    -- Instanciation des decodeurs 7 segments (UTILISE RegAff_captured)
     Decoder0: SevenSegDecoder port map (
-        input => RegAff(3 downto 0),
+        input => RegAff_captured(3 downto 0),
         output => HEX0
     );
     
     Decoder1: SevenSegDecoder port map (
-        input => RegAff(7 downto 4),
+        input => RegAff_captured(7 downto 4),
         output => HEX1
     );
     
     Decoder2: SevenSegDecoder port map (
-        input => RegAff(11 downto 8),
+        input => RegAff_captured(11 downto 8),
         output => HEX2
     );
     
     Decoder3: SevenSegDecoder port map (
-        input => RegAff(15 downto 12),
+        input => RegAff_captured(15 downto 12),
         output => HEX3
     );
     
-    -- LEDs d'état et debug
-    LEDR(9) <= Reset;                              -- État du reset
+    -- LEDs d'etat et debug ADAPTE AU PROGRAMME PROFESSEUR
+    LEDR(9) <= Reset;                              -- Etat du reset
     LEDR(8) <= clk_div;                           -- Horloge du processeur
-    LEDR(7) <= '1' when RegAff /= x"00000000" else '0';  -- RegAff actif
+    LEDR(7) <= '1' when RegAff_captured /= x"00000000" else '0';  -- RegAff capture actif
     
-    -- LEDs de diagnostic BLT
-    LEDR(6) <= '1' when RegAff = x"00000001" else '0';   -- "1" affiché
-    LEDR(5) <= '1' when RegAff = x"00000005" else '0';   -- "5" affiché (ERREUR si BLT marche)
-    LEDR(4) <= '1' when RegAff = x"0000000A" else '0';   -- "A" affiché (SUCCÈS si BLT marche)
+    -- LEDs de diagnostic pour le programme professeur (somme = 55)
+    LEDR(6) <= '1' when RegAff_captured = x"00000037" else '0';   -- "55" affiche (SUCCES FINAL)
+    LEDR(5) <= '1' when RegAff_captured = x"00000001" else '0';   -- "1" premiere iteration
+    LEDR(4) <= '1' when RegAff_captured = x"00000003" else '0';   -- "3" deuxieme iteration
+    LEDR(3) <= '1' when RegAff_captured = x"00000006" else '0';   -- "6" troisieme iteration
+    LEDR(2) <= '1' when RegAff_captured = x"0000000A" else '0';   -- "10" quatrieme iteration
     
-    LEDR(3 downto 0) <= RegAff(3 downto 0);              -- Valeur hexadécimale directe
+    -- LED pour detecter la progression
+    LEDR(1) <= '1' when to_integer(unsigned(RegAff_captured)) > 20 else '0';  -- Somme > 20
+    LEDR(0) <= '1' when to_integer(unsigned(RegAff_captured)) > 40 else '0';  -- Somme > 40
     
-    -- ⭐ RÉSULTAT FINAL ATTENDU AVEC LE FIX NOP :
-    -- HEX: 0001 → 000A → 0001 → 000A... (le 5 ne doit jamais apparaître)
-    -- LEDR(6): Clignote (détection "1")
-    -- LEDR(4): Clignote (détection "A") 
-    -- LEDR(5): JAMAIS allumé (pas de "5" = BLT fonctionne)
+    -- COMPORTEMENT ATTENDU SUR FPGA:
+    -- HEX3 HEX2 HEX1 HEX0 devrait afficher "0037" (55 en decimal)
+    -- LEDR(6) devrait s'allumer quand le calcul est termine (et rester allume)
+    -- LEDR(7) indique qu'une valeur a ete capturee
+    -- Le latch garde la derniere valeur de RegAff meme si le programme redémarre
     
 end architecture archi;

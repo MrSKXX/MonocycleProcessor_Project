@@ -18,32 +18,41 @@ end entity RegisterBank;
 
 architecture behavioral of RegisterBank is
     type table is array(15 downto 0) of std_logic_vector(31 downto 0);
+    
     function init_banc return table is
         variable result : table;
     begin
-        for i in 14 downto 0 loop
-            result(i) := (others=>'0');
-        end loop;
-        result(15):=X"00000030"; 
+        result := (others => (others => '0'));
+        result(15) := X"00000030"; 
         return result;
-    end init_banc;
+    end function;
+
     signal Banc: table := init_banc;
-    
-begin
-    A <= Banc(to_integer(unsigned(RA)));
-    B <= Banc(to_integer(unsigned(RB)));
-   write_process: process(CLK, Reset)
-begin
-    if Reset = '1' then
+
+    procedure reset_banc(signal banc: out table) is
+    begin
         for i in 14 downto 0 loop
-            Banc(i) <= (others => '0');
+            banc(i) <= (others => '0');
         end loop;
-        Banc(15) <= X"00000030";  -- R15 toujours à 0x30
-    elsif rising_edge(CLK) then
-        if WE = '1' and to_integer(unsigned(RW)) /= 15 then  -- Ne pas écrire dans R15
-            Banc(to_integer(unsigned(RW))) <= W;
+        banc(15) <= X"00000030";
+    end procedure;
+
+begin
+
+    A <= Banc(to_integer(unsigned(RA))) when to_integer(unsigned(RA)) <= 15 else (others => '0');
+    B <= Banc(to_integer(unsigned(RB))) when to_integer(unsigned(RB)) <= 15 else (others => '0');
+
+    write_process : process(CLK, Reset)
+    begin
+        if Reset = '1' then
+            reset_banc(Banc);
+        elsif rising_edge(CLK) then
+            if WE = '1' then
+                if to_integer(unsigned(RW)) < 15 then 
+                    Banc(to_integer(unsigned(RW))) <= W;
+                end if;
+            end if;
         end if;
-    end if;
-end process;
-    
+    end process;
+
 end architecture behavioral;

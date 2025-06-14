@@ -1,6 +1,6 @@
 # Script de simulation ModelSim pour le banc de registres
 
-# Création de la bibliothèque de travail
+# Crï¿½ation de la bibliothï¿½que de travail
 vlib work
 
 # Compilation des fichiers VHDL
@@ -10,7 +10,7 @@ vcom -93 -work work RegisterBank_testbench.vhd
 # Chargement du testbench
 vsim -t 1ns work.RegisterBank_testbench
 
-# Ajout des signaux à observer dans la fenêtre de forme d'onde
+# Ajout des signaux ï¿½ observer dans la fenï¿½tre de forme d'onde
 add wave -position insertpoint \
 sim:/RegisterBank_testbench/CLK_tb \
 sim:/RegisterBank_testbench/Reset_tb \
@@ -29,7 +29,7 @@ sim:/RegisterBank_testbench/UUT/Banc(1) \
 sim:/RegisterBank_testbench/UUT/Banc(2) \
 sim:/RegisterBank_testbench/UUT/Banc(3)
 
-# Exécution de la simulation pendant une durée suffisante
+# Exï¿½cution de la simulation pendant une durï¿½e suffisante
 run 100 ns
 
 # Zoom pour voir tous les signaux
